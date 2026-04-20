@@ -125,60 +125,45 @@ const issueBook = async (req, res, next) => {
 const returnBook = async (req, res, next) => {
   const t = await sequelize.transaction();
   try {
-    const issueId = req.params.id;
-
-    const issue = await IssueLog.findOne({
-      where: { issue_id: issueId },
-      transaction: t
+    const issue = await IssueLog.findByPk(req.params.id, {
+      include: [
+        { model: Book, as: 'book' },
+        { model: Member, as: 'member', attributes: ['name', 'email'] }
+      ],
+      transaction: t, lock: true
     });
 
-    if (!issue) {
-      await t.rollback();
-      return res.status(404).json({ success: false, message: 'Issue not found' });
-    }
-
-    if (issue.return_date) {
-      await t.rollback();
-      return res.status(400).json({ success: false, message: 'Already returned' });
-    }
+    if (!issue) { await t.rollback(); return res.status(404).json({ success: false, message: 'Issue record not found' }); }
+    if (issue.return_date) { await t.rollback(); return res.status(400).json({ success: false, message: 'Book already returned' }); }
 
     const returnDate = new Date();
     const fine = calculateFine(issue.due_date, returnDate);
 
-    // ✅ RAW UPDATE (no join, no lock issue)
-    await sequelize.query(
-      `
-      UPDATE issue_log
-      SET return_date = :returnDate,
-          fine_amount = :fine,
-          status = 'returned',
-          "updatedAt" = NOW()
-      WHERE issue_id = :id
-        AND return_date IS NULL
-      `,
-      {
-        replacements: { id: issueId, returnDate, fine },
-        transaction: t
-      }
-    );
+    await issue.update({
+      return_date: returnDate,
+      fine_amount: fine,
+      status: 'returned'
+    }, { transaction: t });
 
-    await Book.increment('available_copies', {
-      by: 1,
-      where: { book_id: issue.book_id },
-      transaction: t
-    });
+    // Update available copies (trigger replacement in app layer)
+    await Book.increment('available_copies', { by: 1, where: { book_id: issue.book_id }, transaction: t });
 
     await t.commit();
 
     res.json({
       success: true,
       message: 'Book returned successfully',
-      data: { fine_amount: fine }
+      data: {
+        issue_id: issue.issue_id,
+        book: issue.book?.title,
+        member: issue.member?.name,
+        return_date: returnDate,
+        fine_amount: fine,
+        fine_per_day: FINE_PER_DAY
+      }
     });
-
   } catch (error) {
     await t.rollback();
-    console.error("FINAL ERROR:", error);
     next(error);
   }
 };
