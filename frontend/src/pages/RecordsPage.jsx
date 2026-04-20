@@ -19,7 +19,7 @@ export default function RecordsPage() {
     setLoading(true);
     try {
       const params = { page, limit: 10, search, status: statusFilter };
-      const { data } = await api.get('/issues', { params });
+      const { data } = await api.get('/api/issues', { params });
       setIssues(data.data.issues);
       setPagination(data.data.pagination);
     } catch {} finally { setLoading(false); }
@@ -31,7 +31,7 @@ export default function RecordsPage() {
     if (!returnTarget) return;
     setReturning(true);
     try {
-      const { data } = await api.put(`/issues/${returnTarget.issue_id}/return`);
+      const { data } = await api.put(`/api/issues/${returnTarget.issue_id}/return`);
       const fine = data.data.fine_amount;
       toast.success(`Book returned! ${fine > 0 ? `Fine: ₹${fine}` : 'No fine.'}`);
       setReturnTarget(null);

@@ -19,7 +19,7 @@ export default function IssuePage() {
     if (memberSearch.length < 2) { setMembers([]); return; }
     const t = setTimeout(async () => {
       try {
-        const { data } = await api.get('/members', { params: { search: memberSearch, limit: 6 } });
+        const { data } = await api.get('/api/members', { params: { search: memberSearch, limit: 6 } });
         setMembers(data.data.members);
       } catch {}
     }, 300);
@@ -30,7 +30,7 @@ export default function IssuePage() {
     if (bookSearch.length < 2) { setBooks([]); return; }
     const t = setTimeout(async () => {
       try {
-        const { data } = await api.get('/books', { params: { search: bookSearch, availability: 'available', limit: 6 } });
+        const { data } = await api.get('/api/books', { params: { search: bookSearch, availability: 'available', limit: 6 } });
         setBooks(data.data.books);
       } catch {}
     }, 300);
@@ -44,7 +44,7 @@ export default function IssuePage() {
     if (!selectedMember || !selectedBook) return;
     setIssuing(true);
     try {
-      const { data } = await api.post('/issues', {
+      const { data } = await api.post('/api/issues', {
         member_id: selectedMember.member_id,
         book_id: selectedBook.book_id,
         loan_days: loanDays

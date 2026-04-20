@@ -21,7 +21,7 @@ export default function MembersPage() {
   const fetchMembers = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await api.get('/members', { params: { page, limit: 10, search } });
+      const { data } = await api.get('/api/members', { params: { page, limit: 10, search } });
       setMembers(data.data.members);
       setPagination(data.data.pagination);
     } catch {} finally { setLoading(false); }
@@ -40,10 +40,10 @@ export default function MembersPage() {
     setSaving(true);
     try {
       if (modal.mode === 'add') {
-        await api.post('/members', form);
+        await api.post('/api/members', form);
         toast.success('Member added!');
       } else {
-        await api.put(`/members/${modal.member.member_id}`, form);
+        await api.put(`/api/members/${modal.member.member_id}`, form);
         toast.success('Member updated!');
       }
       setModal({ open: false });
@@ -53,7 +53,7 @@ export default function MembersPage() {
 
   const handleDelete = async () => {
     try {
-      await api.delete(`/members/${deleteTarget.member_id}`);
+      await api.delete(`/api/members/${deleteTarget.member_id}`);
       toast.success('Member removed');
       setDeleteTarget(null);
       fetchMembers();

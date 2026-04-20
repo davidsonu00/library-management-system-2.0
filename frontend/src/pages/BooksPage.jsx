@@ -25,7 +25,7 @@ export default function BooksPage() {
     setLoading(true);
     try {
       const params = { page, limit: 10, search, category: categoryFilter, availability: availFilter };
-      const { data } = await api.get('/books', { params });
+      const { data } = await api.get('/api/books', { params });
       setBooks(data.data.books);
       setPagination(data.data.pagination);
     } catch {} finally { setLoading(false); }
@@ -34,7 +34,7 @@ export default function BooksPage() {
   useEffect(() => { fetchBooks(); }, [fetchBooks]);
 
   useEffect(() => {
-    api.get('/books/categories').then(r => setCategories(r.data.data)).catch(() => {});
+    api.get('/api/books/categories').then(r => setCategories(r.data.data)).catch(() => {});
   }, []);
 
   const openAdd = () => { setForm(EMPTY_FORM); setModal({ open: true, mode: 'add', book: null }); };
@@ -48,10 +48,10 @@ export default function BooksPage() {
     setSaving(true);
     try {
       if (modal.mode === 'add') {
-        await api.post('/books', form);
+        await api.post('/api/books', form);
         toast.success('Book added successfully!');
       } else {
-        await api.put(`/books/${modal.book.book_id}`, form);
+        await api.put(`/api/books/${modal.book.book_id}`, form);
         toast.success('Book updated!');
       }
       setModal({ open: false });
@@ -62,7 +62,7 @@ export default function BooksPage() {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
-      await api.delete(`/books/${deleteTarget.book_id}`);
+      await api.delete(`/api/books/${deleteTarget.book_id}`);
       toast.success('Book deleted');
       setDeleteTarget(null);
       fetchBooks();
