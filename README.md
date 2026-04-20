@@ -1,4 +1,4 @@
-# 📚 LibraryOS — Full-Stack Library Management System
+#  LibraryOS — Full-Stack Library Management System
 
 A production-ready Library Management System built with **React.js**, **Node.js/Express**, and **MySQL**.
 
@@ -30,7 +30,7 @@ library-app/
 
 ---
 
-## ⚡ Quick Start
+
 
 ### Prerequisites
 - Node.js 18+
@@ -45,11 +45,7 @@ library-app/
 # Login to MySQL
 mysql -u root -p
 
-# Run the schema
-SOURCE /path/to/library-app/database/schema.sql;
-```
 
----
 
 ### 2. Backend Setup
 
@@ -90,16 +86,7 @@ Frontend runs on: `http://localhost:3000`
 
 ---
 
-## 🔐 Default Login
 
-```
-Email:    admin@library.com
-Password: Admin@123
-```
-
-> ⚠️ Change these in your `.env` file before production!
-
----
 
 ## 🌐 API Reference
 
@@ -122,38 +109,22 @@ Password: Admin@123
 
 ---
 
-## ✅ Features
+##  Features
 
-- 🔐 JWT Authentication (Admin login)
-- 📊 Dashboard with charts (Recharts)
-- 📚 Book CRUD — add, edit, delete, search, filter
-- 👥 Member management
-- 📖 Issue books with loan period selection
-- 🔄 Return books with automatic fine calculation
-- ⚠️ Overdue detection & alerts
-- 💰 Fine calculation (₹5/day after due date)
-- 📋 Full issue records with CSV export
-- 📄 Pagination & search on all tables
-- 🎨 Modern UI with Tailwind CSS
-
-## 📦 What Was Added vs Original Schema
-
-| Feature | Original | LibraryOS |
-|---------|----------|-----------|
-| Admin auth table | ❌ | ✅ |
-| JWT login | ❌ | ✅ |
-| Due date tracking | ❌ | ✅ |
-| Fine storage in DB | ❌ | ✅ |
-| Issue status field | ❌ | ✅ |
-| Member phone/type | ❌ | ✅ |
-| Book ISBN/publisher | ❌ | ✅ |
-| Full REST API | ❌ | ✅ |
-| React frontend | ❌ | ✅ |
-
----
+-  JWT Authentication (Admin login)
+-  Dashboard with charts (Recharts)
+-  Book CRUD — add, edit, delete, search, filter
+-  Member management
+-  Issue books with loan period selection
+-  Return books with automatic fine calculation
+-  Overdue detection & alerts
+-  Fine calculation (₹5/day after due date)
+-  Full issue records with CSV export
+-  Modern UI with Tailwind CSS
+-  Pagination & search on all tables
 
 ## 🛠 Tech Stack
 
 **Frontend:** React 18, Tailwind CSS, Recharts, Axios, React Router v6, React Hot Toast  
 **Backend:** Node.js, Express.js, Sequelize ORM, JWT, bcryptjs  
-**Database:** MySQL 8 (preserved original schema + enhancements)
+**Database:** MySQL 8+
