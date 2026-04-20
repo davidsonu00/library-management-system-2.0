@@ -123,34 +123,45 @@ const issueBook = async (req, res, next) => {
 };
 
 const returnBook = async (req, res, next) => {
-  const t = await sequelize.transaction();
+  let t;
   try {
-    // 1. Fetch and LOCK the issue record ONLY (removed include here)
-    const issue = await IssueLog.findByPk(req.params.id, {
-      transaction: t, 
-      lock: true 
-    });
+    t = await sequelize.transaction();
 
-    if (!issue) { 
-      await t.rollback(); 
-      return res.status(404).json({ success: false, message: 'Issue record not found' }); 
+    // 1. RAW LOCK: This locks ONLY the issue_log row without any Sequelize "magic"
+    // This is the direct fix for the "nullable side of an outer join" error
+    await sequelize.query(
+      `SELECT * FROM issue_log WHERE issue_id = :id FOR UPDATE`,
+      {
+        replacements: { id: req.params.id },
+        type: sequelize.QueryTypes.SELECT,
+        transaction: t
+      }
+    );
+
+    // 2. Fetch the data normally now that it's locked
+    const issue = await IssueLog.findByPk(req.params.id, { transaction: t });
+
+    if (!issue) {
+      await t.rollback();
+      return res.status(404).json({ success: false, message: 'Issue record not found' });
     }
-    if (issue.return_date) { 
-      await t.rollback(); 
-      return res.status(400).json({ success: false, message: 'Book already returned' }); 
+
+    if (issue.return_date) {
+      await t.rollback();
+      return res.status(400).json({ success: false, message: 'Book already returned' });
     }
 
     const returnDate = new Date();
     const fine = calculateFine(issue.due_date, returnDate);
 
-    // 2. Update the record
+    // 3. Update the record
     await issue.update({
       return_date: returnDate,
       fine_amount: fine,
       status: 'returned'
     }, { transaction: t });
 
-    // 3. Update book availability
+    // 4. Update available copies
     await Book.increment('available_copies', { 
       by: 1, 
       where: { book_id: issue.book_id }, 
@@ -159,28 +170,16 @@ const returnBook = async (req, res, next) => {
 
     await t.commit();
 
-    // 4. Fetch the details for the response AFTER the transaction is done
-    const finalData = await IssueLog.findByPk(issue.issue_id, {
-      include: [
-        { model: Book, as: 'book' },
-        { model: Member, as: 'member', attributes: ['name', 'email'] }
-      ]
-    });
-
+    // 5. Success Response
     res.json({
       success: true,
       message: 'Book returned successfully',
-      data: {
-        issue_id: finalData.issue_id,
-        book: finalData.book?.title,
-        member: finalData.member?.name,
-        return_date: returnDate,
-        fine_amount: fine,
-        fine_per_day: FINE_PER_DAY
-      }
+      data: { fine_amount: fine }
     });
+
   } catch (error) {
     if (t) await t.rollback();
+    console.error("SQL ERROR DETAILS:", error.message); 
     next(error);
   }
 };
