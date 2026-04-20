@@ -125,10 +125,8 @@ const issueBook = async (req, res, next) => {
 const returnBook = async (req, res, next) => {
   const t = await sequelize.transaction();
   try {
-
     const issueId = req.params.id;
 
-    // ✅ Step 1: Get issue WITHOUT lock
     const issue = await IssueLog.findOne({
       where: { issue_id: issueId },
       transaction: t
@@ -147,31 +145,23 @@ const returnBook = async (req, res, next) => {
     const returnDate = new Date();
     const fine = calculateFine(issue.due_date, returnDate);
 
-    // ✅ Step 2: Safe update (only if not already returned)
-    const [updatedCount] = await IssueLog.update(
+    // ✅ RAW UPDATE (no join, no lock issue)
+    await sequelize.query(
+      `
+      UPDATE issue_log
+      SET return_date = :returnDate,
+          fine_amount = :fine,
+          status = 'returned',
+          "updatedAt" = NOW()
+      WHERE issue_id = :id
+        AND return_date IS NULL
+      `,
       {
-        return_date: returnDate,
-        fine_amount: fine,
-        status: 'returned'
-      },
-      {
-        where: {
-          issue_id: issueId,
-          return_date: null // 🔥 prevents race condition
-        },
+        replacements: { id: issueId, returnDate, fine },
         transaction: t
       }
     );
 
-    if (updatedCount === 0) {
-      await t.rollback();
-      return res.status(400).json({
-        success: false,
-        message: 'Already returned by another request'
-      });
-    }
-
-    // ✅ Step 3: Increment book copies
     await Book.increment('available_copies', {
       by: 1,
       where: { book_id: issue.book_id },
@@ -188,7 +178,7 @@ const returnBook = async (req, res, next) => {
 
   } catch (error) {
     await t.rollback();
-    console.error(error);
+    console.error("FINAL ERROR:", error);
     next(error);
   }
 };
