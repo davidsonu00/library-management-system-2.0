@@ -125,45 +125,62 @@ const issueBook = async (req, res, next) => {
 const returnBook = async (req, res, next) => {
   const t = await sequelize.transaction();
   try {
+    // 1. Fetch and LOCK the issue record ONLY (removed include here)
     const issue = await IssueLog.findByPk(req.params.id, {
-      include: [
-        { model: Book, as: 'book' },
-        { model: Member, as: 'member', attributes: ['name', 'email'] }
-      ],
-      transaction: t, lock: true
+      transaction: t, 
+      lock: true 
     });
 
-    if (!issue) { await t.rollback(); return res.status(404).json({ success: false, message: 'Issue record not found' }); }
-    if (issue.return_date) { await t.rollback(); return res.status(400).json({ success: false, message: 'Book already returned' }); }
+    if (!issue) { 
+      await t.rollback(); 
+      return res.status(404).json({ success: false, message: 'Issue record not found' }); 
+    }
+    if (issue.return_date) { 
+      await t.rollback(); 
+      return res.status(400).json({ success: false, message: 'Book already returned' }); 
+    }
 
     const returnDate = new Date();
     const fine = calculateFine(issue.due_date, returnDate);
 
+    // 2. Update the record
     await issue.update({
       return_date: returnDate,
       fine_amount: fine,
       status: 'returned'
     }, { transaction: t });
 
-    // Update available copies (trigger replacement in app layer)
-    await Book.increment('available_copies', { by: 1, where: { book_id: issue.book_id }, transaction: t });
+    // 3. Update book availability
+    await Book.increment('available_copies', { 
+      by: 1, 
+      where: { book_id: issue.book_id }, 
+      transaction: t 
+    });
 
     await t.commit();
+
+    // 4. Fetch the details for the response AFTER the transaction is done
+    const finalData = await IssueLog.findByPk(issue.issue_id, {
+      include: [
+        { model: Book, as: 'book' },
+        { model: Member, as: 'member', attributes: ['name', 'email'] }
+      ]
+    });
 
     res.json({
       success: true,
       message: 'Book returned successfully',
       data: {
-        issue_id: issue.issue_id,
-        book: issue.book?.title,
-        member: issue.member?.name,
+        issue_id: finalData.issue_id,
+        book: finalData.book?.title,
+        member: finalData.member?.name,
         return_date: returnDate,
         fine_amount: fine,
         fine_per_day: FINE_PER_DAY
       }
     });
   } catch (error) {
-    await t.rollback();
+    if (t) await t.rollback();
     next(error);
   }
 };
