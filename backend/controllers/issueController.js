@@ -208,12 +208,11 @@ const getDashboardStats = async (req, res, next) => {
 
     const monthlyTrend = await IssueLog.findAll({
       attributes: [
-        [fn('DATE_FORMAT', col('issue_date'), '%Y-%m'), 'month'],
-        [fn('COUNT', col('issue_id')), 'count']
-      ],
-      where: { issue_date: { [Op.gte]: sixMonthsAgo } },
-      group: [fn('DATE_FORMAT', col('issue_date'), '%Y-%m')],
-      order: [[fn('DATE_FORMAT', col('issue_date'), '%Y-%m'), 'ASC']],
+  [fn('TO_CHAR', col('issue_date'), 'YYYY-MM'), 'month'],
+  [fn('COUNT', col('issue_id')), 'count']
+],
+group: [fn('TO_CHAR', col('issue_date'), 'YYYY-MM')],
+order: [[fn('TO_CHAR', col('issue_date'), 'YYYY-MM'), 'ASC']],
       raw: true
     });
 

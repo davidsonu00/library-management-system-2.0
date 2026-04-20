@@ -23,7 +23,7 @@ const Admin = sequelize.define('Admin', {
     allowNull: false
   },
   role: {
-    type: DataTypes.ENUM('admin', 'librarian'),
+    type: DataTypes.STRING(20),
     defaultValue: 'admin'
   },
   last_login: {
