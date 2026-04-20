@@ -48,7 +48,7 @@ export default function BooksPage() {
     setSaving(true);
     try {
       if (modal.mode === 'add') {
-        await api.post('/books', form);
+        await api.post('/api/books', form);
         toast.success('Book added successfully!');
       } else {
         await api.put(`/books/${modal.book.book_id}`, form);
