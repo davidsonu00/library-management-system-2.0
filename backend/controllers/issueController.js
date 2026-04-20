@@ -123,23 +123,16 @@ const issueBook = async (req, res, next) => {
 };
 
 const returnBook = async (req, res, next) => {
-  let t;
+  const t = await sequelize.transaction();
   try {
-    t = await sequelize.transaction();
-
-    // 1. RAW LOCK: This locks ONLY the issue_log row without any Sequelize "magic"
-    // This is the direct fix for the "nullable side of an outer join" error
-    await sequelize.query(
-      `SELECT * FROM issue_log WHERE issue_id = :id FOR UPDATE`,
-      {
-        replacements: { id: req.params.id },
-        type: sequelize.QueryTypes.SELECT,
-        transaction: t
+    const issue = await IssueLog.findOne({
+      where: { issue_id: req.params.id },
+      transaction: t,
+      lock: {
+        level: t.LOCK.UPDATE,
+        of: IssueLog
       }
-    );
-
-    // 2. Fetch the data normally now that it's locked
-    const issue = await IssueLog.findByPk(req.params.id, { transaction: t });
+    });
 
     if (!issue) {
       await t.rollback();
@@ -154,23 +147,20 @@ const returnBook = async (req, res, next) => {
     const returnDate = new Date();
     const fine = calculateFine(issue.due_date, returnDate);
 
-    // 3. Update the record
     await issue.update({
       return_date: returnDate,
       fine_amount: fine,
       status: 'returned'
     }, { transaction: t });
 
-    // 4. Update available copies
-    await Book.increment('available_copies', { 
-      by: 1, 
-      where: { book_id: issue.book_id }, 
-      transaction: t 
+    await Book.increment('available_copies', {
+      by: 1,
+      where: { book_id: issue.book_id },
+      transaction: t
     });
 
     await t.commit();
 
-    // 5. Success Response
     res.json({
       success: true,
       message: 'Book returned successfully',
@@ -178,8 +168,7 @@ const returnBook = async (req, res, next) => {
     });
 
   } catch (error) {
-    if (t) await t.rollback();
-    console.error("SQL ERROR DETAILS:", error.message); 
+    await t.rollback();
     next(error);
   }
 };
