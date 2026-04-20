@@ -125,34 +125,53 @@ const issueBook = async (req, res, next) => {
 const returnBook = async (req, res, next) => {
   const t = await sequelize.transaction();
   try {
+
+    const issueId = req.params.id;
+
+    // ✅ Step 1: Get issue WITHOUT lock
     const issue = await IssueLog.findOne({
-      where: { issue_id: req.params.id },
-      transaction: t,
-      lock: {
-        level: t.LOCK.UPDATE,
-        of: IssueLog
-      }
+      where: { issue_id: issueId },
+      transaction: t
     });
 
     if (!issue) {
       await t.rollback();
-      return res.status(404).json({ success: false, message: 'Issue record not found' });
+      return res.status(404).json({ success: false, message: 'Issue not found' });
     }
 
     if (issue.return_date) {
       await t.rollback();
-      return res.status(400).json({ success: false, message: 'Book already returned' });
+      return res.status(400).json({ success: false, message: 'Already returned' });
     }
 
     const returnDate = new Date();
     const fine = calculateFine(issue.due_date, returnDate);
 
-    await issue.update({
-      return_date: returnDate,
-      fine_amount: fine,
-      status: 'returned'
-    }, { transaction: t });
+    // ✅ Step 2: Safe update (only if not already returned)
+    const [updatedCount] = await IssueLog.update(
+      {
+        return_date: returnDate,
+        fine_amount: fine,
+        status: 'returned'
+      },
+      {
+        where: {
+          issue_id: issueId,
+          return_date: null // 🔥 prevents race condition
+        },
+        transaction: t
+      }
+    );
 
+    if (updatedCount === 0) {
+      await t.rollback();
+      return res.status(400).json({
+        success: false,
+        message: 'Already returned by another request'
+      });
+    }
+
+    // ✅ Step 3: Increment book copies
     await Book.increment('available_copies', {
       by: 1,
       where: { book_id: issue.book_id },
@@ -169,6 +188,7 @@ const returnBook = async (req, res, next) => {
 
   } catch (error) {
     await t.rollback();
+    console.error(error);
     next(error);
   }
 };
