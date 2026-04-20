@@ -34,7 +34,7 @@ library-app/
 
 ### Prerequisites
 - Node.js 18+
-- MySQL 8.0+
+- MySQL 8.0+ (for local dev)
 - npm or yarn
 
 ---
@@ -42,10 +42,23 @@ library-app/
 ### 1. Database Setup
 
 ```bash
-# Login to MySQL
+### Database Options
+- Option 1: MySQL (Local Development)
 mysql -u root -p
 
+Import schema:
+source database/mysql_schema.sql;
 
+
+Option 2: PostgreSQL (Cloud Deployment )
+
+Use Supabase:
+
+Create project
+Open SQL Editor
+Run postgres_schema.sql
+
+---
 
 ### 2. Backend Setup
 
@@ -128,3 +141,23 @@ Frontend runs on: `http://localhost:3000`
 **Frontend:** React 18, Tailwind CSS, Recharts, Axios, React Router v6, React Hot Toast  
 **Backend:** Node.js, Express.js, Sequelize ORM, JWT, bcryptjs  
 **Database:** MySQL 8+
+
+
+## 💡 Key Learning
+
+* Designed a full-stack application using **React, Node.js, and SQL**, following clean architecture (MVC pattern)
+* Built a complete **book issuing workflow** with validations (availability, duplicate issue prevention)
+* Implemented **fine calculation logic** based on due date and return date
+* Managed relational data using **Sequelize ORM with associations** (Books ↔ Members ↔ Issue Logs)
+* Migrated database from **MySQL to PostgreSQL (Supabase)** for cloud deployment
+* Integrated **cloud database (Supabase)** with secure connection and SSL configuration
+* Learned to manage **environment variables securely** using `.env` and avoided exposing secrets
+* Deployed backend and frontend using **Render and Vercel**
+* Debugged real-world issues like:
+
+  * Schema conflicts with views
+  * ORM sync errors
+  * Query incompatibility across databases
+* Implemented **pagination, search, and filtering** for scalable data handling
+* Built a responsive and modern UI using **Tailwind CSS**
+* Understood **production-level practices** like API structuring, error handling, and modular code design
