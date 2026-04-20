@@ -31,33 +31,35 @@ const getAllIssues = async (req, res, next) => {
       memberWhere.name = { [Op.like]: `%${search}%` };
     }
 
-    const { count, rows } = await IssueLog.findAndCountAll({
-      where,
-     include: [
-  {
-    model: Member,
-    as: 'member',
-    attributes: ['member_id', 'name', 'email', 'phone'],
-    where: search ? memberWhere : undefined,
-    required: true // ✅ FORCE INNER JOIN
-  },
-  {
-    model: Book,
-    as: 'book',
-    attributes: ['book_id', 'title', 'author', 'category'],
-    required: true // ✅ FORCE INNER JOIN
-  },
-  {
-    model: Admin,
-    as: 'issuer',
-    attributes: ['name', 'email'],
-    required: false // admin optional
-  }
-],
-      limit: parseInt(limit),
-      offset: parseInt(offset),
-      order: [['issue_date', 'DESC']]
-    });
+   const rows = await IssueLog.findAll({
+  where,
+  include: [
+    {
+      model: Member,
+      as: 'member',
+      attributes: ['member_id', 'name', 'email', 'phone'],
+      where: search ? memberWhere : undefined,
+      required: true
+    },
+    {
+      model: Book,
+      as: 'book',
+      attributes: ['book_id', 'title', 'author', 'category'],
+      required: true
+    },
+    {
+      model: Admin,
+      as: 'issuer',
+      attributes: ['name', 'email'],
+      required: false
+    }
+  ],
+  limit: parseInt(limit),
+  offset: parseInt(offset),
+  order: [['issue_date', 'DESC']]
+});
+
+const count = await IssueLog.count({ where });
 
     const issuesWithFine = rows.map(issue => {
       const obj = issue.toJSON();
