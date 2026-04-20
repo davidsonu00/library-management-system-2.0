@@ -7,8 +7,8 @@ const seed = async () => {
     console.log('✅ Database connected');
 
     // Sync all models (creates tables if not exist)
-    await sequelize.sync({ alter: true });
-    console.log('✅ Tables synced');
+    // await sequelize.sync({ alter: true });
+    console.log('✅ Tables already created via schema.sql');
 
     // Create default admin
     const existing = await Admin.findOne({ where: { email: process.env.ADMIN_EMAIL || 'admin@library.com' } });
