@@ -135,6 +135,19 @@ Frontend runs on: `http://localhost:3000`
 -  Full issue records with CSV export
 -  Modern UI with Tailwind CSS
 -  Pagination & search on all tables
+-  AI Librarian chat for read-only book, member, loan, fine, and trend questions
+
+### AI Librarian setup
+
+The AI Librarian is available from the authenticated app sidebar at **AI Librarian**. It uses Google Gemini from the backend and requires a Gemini API key:
+
+```env
+GEMINI_API_KEY=your_key_here
+GEMINI_MODEL=gemini-3.6-flash
+AI_SHARE_MEMBER_NAMES=false
+```
+
+Add these values to `backend/.env` and restart the backend. Keep the key on the backend; never add it to a `REACT_APP_` variable. By default, member names are redacted before records are sent to Gemini. Set `AI_SHARE_MEMBER_NAMES=true` only if you want the AI to receive real member names. AI queries are read-only and require the librarian to be signed in. Common questions about overdue items, fines, recent issues, popular books, pending returns, and availability are answered directly from LibraryOS records, even when Gemini is busy or unavailable. Other open-ended questions use Gemini.
 
 ## 🛠 Tech Stack
 

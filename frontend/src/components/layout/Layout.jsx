@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import {
   BookOpenIcon, HomeIcon, UserGroupIcon, ArrowRightOnRectangleIcon,
   ClipboardDocumentListIcon, DocumentTextIcon, Bars3Icon, XMarkIcon,
-  BookmarkSquareIcon, BellIcon
+  BookmarkSquareIcon, BellIcon, SparklesIcon
 } from '@heroicons/react/24/outline';
 
 const navItems = [
@@ -13,6 +13,7 @@ const navItems = [
   { to: '/members', icon: UserGroupIcon, label: 'Members' },
   { to: '/issue', icon: BookmarkSquareIcon, label: 'Issue Book' },
   { to: '/records', icon: ClipboardDocumentListIcon, label: 'Records' },
+  { to: '/assistant', icon: SparklesIcon, label: 'AI Librarian' },
 ];
 
 export default function Layout() {

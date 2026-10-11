@@ -256,4 +256,4 @@ order: [[fn('TO_CHAR', col('issue_date'), 'YYYY-MM'), 'ASC']],
   }
 };
 
-module.exports = { getAllIssues, issueBook, returnBook, getIssueById, getDashboardStats };
+module.exports = { getAllIssues, issueBook, returnBook, getIssueById, getDashboardStats, calculateFine };

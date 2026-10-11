@@ -8,6 +8,7 @@ import BooksPage from './pages/BooksPage';
 import MembersPage from './pages/MembersPage';
 import IssuePage from './pages/IssuePage';
 import RecordsPage from './pages/RecordsPage';
+import AILibrarianChat from './components/ai/AILibrarianChat';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -48,6 +49,7 @@ export default function App() {
             <Route path="members" element={<MembersPage />} />
             <Route path="issue" element={<IssuePage />} />
             <Route path="records" element={<RecordsPage />} />
+            <Route path="assistant" element={<AILibrarianChat />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
